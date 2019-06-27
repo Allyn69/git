@@ -8,6 +8,7 @@ struct dir_iterator_level {
 
 	/* The inode number of this level's directory. */
 	ino_t ino;
+	dev_t dev;
 
 	/*
 	 * The length of the directory part of path at this level
@@ -63,6 +64,7 @@ static int push_level(struct dir_iterator_int *iter)
 		strbuf_addch(&iter->base.path, '/');
 	level->prefix_len = iter->base.path.len;
 	level->ino = iter->base.st.st_ino;
+	level->dev = iter->base.st.st_dev;
 
 	level->dir = opendir(iter->base.path.buf);
 	if (!level->dir) {
@@ -138,11 +140,14 @@ static int find_recursive_symlinks(struct dir_iterator_int *iter)
 	int i;
 
 	if (!(iter->flags & DIR_ITERATOR_FOLLOW_SYMLINKS) ||
-	    !S_ISDIR(iter->base.st.st_mode))
+	    !S_ISDIR(iter->base.st.st_mode) ||
+	    /* On Windows, st_ino is always set to 0 */
+	    !iter->base.st.st_ino)
 		return 0;
 
 	for (i = 0; i < iter->levels_nr; ++i)
-		if (iter->base.st.st_ino == iter->levels[i].ino)
+		if (iter->base.st.st_ino == iter->levels[i].ino &&
+		    iter->base.st.st_dev == iter->levels[i].dev)
 			return 1;
 	return 0;
 }
