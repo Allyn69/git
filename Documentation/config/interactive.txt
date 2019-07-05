@@ -14,3 +14,4 @@ interactive.diffFilter::
 	mark up the diff further for human consumption, provided that it
 	retains a one-to-one correspondence with the lines in the
 	original diff. Defaults to disabled (no filtering).
+
